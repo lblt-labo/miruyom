@@ -84,7 +84,7 @@ label{font-weight:700;font-size:1.1rem}
   <div class="row" style="margin-top:10px"><button class="btn y" id="bShot">📷 撮る</button><button class="btn g" id="bCamX">やめる</button></div>
 </div>
 
-<div class="ov" id="ld"><div class="spin"></div><div>読み取っています...<br><small id="pg" style="font-size:1.1rem"></small></div></div>
+<div class="ov" id="ld"><div class="spin"></div><div>読み取り中...<br><small id="pg" style="font-size:1.1rem"></small></div></div>
 
 <div class="ov" id="res">
   <div class="mode" id="rmode"></div>
@@ -225,23 +225,6 @@ async function openCam(){
   var f=$('file');if(f){f.value='';f.click()}
  }
 }
-function enh(c){
- try{
-  var x=c.getContext('2d'),w=c.width,h=c.height,d=x.getImageData(0,0,w,h),p=d.data,n=w*h,g=new Uint8Array(n),hist=new Array(256).fill(0),i,sum=0;
-  for(i=0;i<n;i++){var v=Math.round(.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2]);g[i]=v;hist[v]++;sum+=v}
-  var sB=0,wB=0,mx=0,th=128;
-  for(i=0;i<256;i++){
-   wB+=hist[i];if(!wB)continue;
-   var wF=n-wB;if(!wF)break;
-   sB+=i*hist[i];
-   var mB=sB/wB,mF=(sum-sB)/wF,bt=wB*wF*(mB-mF)*(mB-mF);
-   if(bt>mx){mx=bt;th=i}
-  }
-  for(i=0;i<n;i++){var o=g[i]>th?255:0;p[i*4]=o;p[i*4+1]=o;p[i*4+2]=o}
-  x.putImageData(d,0,0);
- }catch(e){}
- return c;
-}
 function shrink(file){
  return new Promise(function(res){
   try{
@@ -250,7 +233,7 @@ function shrink(file){
     var s=Math.min(1,1920/Math.max(im.width,im.height)),c=document.createElement('canvas');
     c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
     c.getContext('2d').drawImage(im,0,0,c.width,c.height);
-    URL.revokeObjectURL(url);res(enh(c));
+    URL.revokeObjectURL(url);res(c);
    }catch(e){res(file)}};
    im.onerror=function(){res(file)};
    im.src=url;
@@ -258,26 +241,41 @@ function shrink(file){
  });
 }
 
-async function runOcr(file){
+async function runOcr(src){
  show('ld',true);var pg=$('pg');if(pg)pg.textContent='';
+ var worker=null,timer=null,rejT=null;
+ var tp=new Promise(function(_,rej){rejT=rej});
+ function arm(){try{clearTimeout(timer);timer=setTimeout(function(){if(rejT)rejT(new Error('timeout'))},10000)}catch(e){}}
  try{
   if(!window.Tesseract)throw new Error('no ocr');
-  var img=(file instanceof HTMLCanvasElement)?enh(file):await shrink(file);
-  var r=await Tesseract.recognize(img,'jpn+eng',{logger:function(m){try{
-   if(!pg)return;var pc=Math.round((m.progress||0)*100)+'%';
-   if(m.status==='recognizing text')pg.textContent='文字を読んでいます '+pc;
-   else if(/language|traineddata/.test(m.status))pg.textContent='日本語データを準備中 '+pc;
-  }catch(e){}}});
-  var d=r&&r.data,t=extract(mode,d);
+  arm();
+  var job=(async function(){
+   var img=src;
+   if(!(src instanceof HTMLCanvasElement))img=await shrink(src);
+   if(img instanceof HTMLCanvasElement)img=img.toDataURL('image/png');
+   arm();
+   worker=await Tesseract.createWorker('jpn+eng',1,{logger:function(m){try{
+    arm();if(!pg)return;var pc=Math.round((m.progress||0)*100)+'%';
+    if(m.status==='recognizing text')pg.textContent='文字を読んでいます '+pc;
+    else if(/language|traineddata/.test(m.status))pg.textContent='日本語データを準備中 '+pc;
+   }catch(e){}}});
+   arm();
+   var r=await worker.recognize(img);
+   return r&&r.data;
+  })();
+  var d=await Promise.race([job,tp]);
+  clearTimeout(timer);
+  var t=extract(mode,d);
   show('ld',false);
   if(t)showResult(t,true);
-  else showResult('読めませんでした。\nもう少し近づいて、明るい所で撮りなおしてください。',false);
+  else showResult('文字が読み取れませんでした。\nもう少し近づけて再度お試しください。',false);
  }catch(e){
-  show('ld',false);
-  showResult('うまく読み取れませんでした。\nネットにつながっているか確認して、もう一度お試しください。',false);
+  clearTimeout(timer);show('ld',false);
+  showResult(String(e&&e.message)==='timeout'?'文字が読み取れませんでした。\nもう少し近づけて再度お試しください。':'うまく読み取れませんでした。\nネットにつながっているか確認して、もう一度お試しください。',false);
+ }finally{
+  try{if(worker)worker.terminate()}catch(e){}
  }
 }
-
 if((b=$('bShot')))b.addEventListener('click',function(){
  try{
   var v=$('vid');
