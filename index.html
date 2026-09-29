@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ミルヨム</title>
+<meta name="theme-color" content="#111111">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ミルヨム">
+<meta property="og:description" content="暮らしの「見えにくい」をゆるめるアプリ">
+<meta property="og:image" content="./ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ミルヨム">
+<meta name="twitter:description" content="暮らしの「見えにくい」をゆるめるアプリ">
+<meta name="twitter:image" content="./ogp.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#111;color:#fff;font-family:-apple-system,"Hiragino Sans","Noto Sans JP",Meiryo,sans-serif}
+#app{display:flex;flex-direction:column;height:100dvh;min-height:480px;padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;justify-content:space-between;padding:6px 4px;flex:none}
+header h1{margin:0;font-size:1.5rem;line-height:1.1}
+header small{display:block;font-size:.7rem;color:#ccc;font-weight:400}
+.hb{display:flex;gap:8px}
+.ib{width:52px;height:52px;border-radius:14px;border:3px solid #fff;background:#222;color:#fff;font-size:1.6rem;cursor:pointer}
+.ib:active{transform:scale(.92);background:#555}
+#main{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;padding-bottom:6px}
+.big{flex:1;min-height:90px;border:8px solid #fff;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;box-shadow:0 0 0 4px #000 inset}
+.big:active{transform:scale(.97);filter:brightness(1.3);border-style:dashed}
+.big .ic{font-size:clamp(2rem,9vh,4rem);line-height:1}
+.big .lb{font-size:clamp(2rem,8vh,3.6rem);font-weight:900;line-height:1.2}
+.big .sub{font-size:1rem;font-weight:700}
+.c-food{background:#D55E00;color:#fff}
+.c-med{background:#F0E442;color:#000}
+.c-what{background:#0072B2;color:#fff}
+.c-news{background:#333;color:#fff}
+.ov{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);background:#000;color:#fff;overflow:auto}
+.ov.on{display:flex}
+.ov h2{margin:0 0 10px;font-size:1.6rem}
+.mode{font-size:1.2rem;font-weight:700;background:#fff;color:#000;border-radius:10px;padding:4px 12px;align-self:flex-start}
+#rtext{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;line-height:1.3;white-space:pre-wrap;word-break:break-all;color:#F0E442;padding:8px 0}
+.row{display:flex;gap:10px;flex:none}
+.btn{flex:1;min-height:64px;border-radius:18px;border:4px solid #fff;background:#0072B2;color:#fff;font-size:1.4rem;font-weight:800;cursor:pointer;font-family:inherit;padding:8px}
+.btn.g{background:#333}
+.btn.y{background:#F0E442;color:#000}
+.btn:active{transform:scale(.96);filter:brightness(1.3)}
+.spin{width:80px;height:80px;border:10px solid #555;border-top-color:#F0E442;border-radius:50%;animation:sp 1s linear infinite;margin:auto auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#ld{align-items:center;justify-content:center;text-align:center;font-size:1.6rem;font-weight:800}
+.card{background:#1c1c1c;border:3px solid #fff;border-radius:16px;padding:12px;margin-bottom:12px;font-size:1.1rem;line-height:1.6}
+.card b{color:#F0E442}
+select,input[type=password],input[type=tel]{width:100%;min-height:52px;font-size:1.3rem;border-radius:10px;border:3px solid #fff;background:#000;color:#fff;padding:6px 10px;margin:6px 0;font-family:inherit}
+label{font-weight:700;font-size:1.1rem}
+.sw{display:flex;align-items:center;gap:10px;min-height:52px}
+.sw input{width:34px;height:34px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:auto;width:100%;max-width:340px}
+.pad button{min-height:72px;font-size:2rem;font-weight:800;border-radius:16px;border:4px solid #fff;background:#222;color:#fff;font-family:inherit}
+.pad button:active{background:#0072B2}
+#dots{font-size:2.6rem;letter-spacing:.4em;text-align:center;margin:14px 0;min-height:3.2rem}
+#inst{position:fixed;left:10px;right:10px;bottom:10px;z-index:40;background:#fff;color:#000;border:4px solid #0072B2;border-radius:16px;padding:12px;font-weight:700;display:flex;gap:8px;align-items:center;transform:translateY(160%);transition:transform .6s ease}
+#inst.on{transform:none}
+#inst span{flex:1;font-size:.95rem}
+#inst button{min-height:44px;min-width:44px;border-radius:10px;border:3px solid #000;font-weight:800;font-family:inherit;background:#F0E442}
+#msg{color:#F0E442;font-weight:700;min-height:1.4em}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ミルヨム<small>暮らしの「見えにくい」をゆるめるアプリ</small></h1>
+    <div class="hb">
+      <button class="ib" id="bHelp" aria-label="使い方・ヘルプ">❓</button>
+      <button class="ib" id="bSet" aria-label="設定">⚙</button>
+    </div>
+  </header>
+  <div id="main"></div>
+  <input type="file" id="file" accept="image/*" capture="environment" hidden>
+</div>
+
+<div class="ov" id="ld"><div class="spin"></div><div>読み取り中…<br><small id="pg" style="font-size:1.1rem"></small></div></div>
+
+<div class="ov" id="res">
+  <div class="mode" id="rmode"></div>
+  <div id="rtext"></div>
+  <div class="row"><button class="btn y" id="bAgain">🔊 もう一度きく</button><button class="btn g" id="bClose">とじる</button></div>
+</div>
+
+<div class="ov" id="help">
+  <h2>❓ 使い方</h2>
+  <div class="card"><b>① えらぶ</b><br>読みたいものの大きなボタンをタップします。<br>🍱 食品　💊 くすり　🔍 なにこれ？</div>
+  <div class="card"><b>② とる</b><br>カメラが開きます。読みたい文字が大きく写るように、明るい所で撮ります。</div>
+  <div class="card"><b>③ きく・みる</b><br>ほしい情報だけが、大きな文字で出ます。声でも読み上げます。</div>
+  <div class="card"><b>こんなときは</b><br>・読めないとき：文字に近づいて、影を避けて撮りなおします。<br>・ボタンを変えたい：⚙ から「新聞」などに入れ替えできます。<br>・まちがい防止：⚙ で4桁の合言葉を決められます。<br>・最初の読み込みだけ、ネットにつながっている必要があります。<br>・読み取り結果は完全ではありません。大切な情報は、必ず元のラベルでも確認してください。</div>
+  <button class="btn" id="hClose">とじる</button>
+</div>
+
+<div class="ov" id="set">
+  <h2>⚙ 設定</h2>
+  <div class="card"><b>ボタンの入れ替え</b>（最大3つ）
+    <label for="s0">上のボタン</label><select id="s0"></select>
+    <label for="s1">まんなかのボタン</label><select id="s1"></select>
+    <label for="s2">下のボタン</label><select id="s2"></select>
+  </div>
+  <div class="card"><b>合言葉ロック</b>（まちがい防止）
+    <div class="sw"><input type="checkbox" id="lockOn"><label for="lockOn">ロックを使う</label></div>
+    <label for="pc">4けたの数字</label><input type="tel" id="pc" inputmode="numeric" maxlength="4" placeholder="例：1234" autocomplete="off">
+  </div>
+  <div id="msg"></div>
+  <div class="row"><button class="btn y" id="sSave">保存する</button><button class="btn g" id="sClose">とじる</button></div>
+</div>
+
+<div class="ov" id="lock">
+  <h2 style="text-align:center">🔒 合言葉を入れてください</h2>
+  <div id="dots"></div>
+  <div class="pad" id="pad"></div>
+  <div id="lmsg" style="text-align:center;color:#F0E442;font-weight:800;font-size:1.2rem;margin-top:12px;min-height:1.5em"></div>
+</div>
+
+<div id="inst"><span id="instTx">📲 ホーム画面に追加してアプリとして使えます</span><button id="instYes">追加</button><button id="instNo" aria-label="閉じる">✕</button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+var $=function(i){return document.getElementById(i)};
+var store={
+ get:function(k,d){try{var v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+ set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+var PRE={
+ food:{label:'食品',icon:'🍱',sub:'温め時間・期限',cls:'c-food'},
+ med:{label:'くすり',icon:'💊',sub:'いつ飲むか',cls:'c-med'},
+ what:{label:'なにこれ？',icon:'🔍',sub:'ざっくり読む',cls:'c-what'},
+ news:{label:'新聞',icon:'📰',sub:'大きな見出し',cls:'c-news'}
+};
+var slots=store.get('slots',['food','med','what']);
+if(!Array.isArray(slots)||slots.length!==3||slots.some(function(s){return !PRE[s]}))slots=['food','med','what'];
+var mode='what',lastText='';
+
+function show(id,on){var e=$(id);if(e)e.classList.toggle('on',!!on)}
+
+function renderMain(){
+ try{
+  var m=$('main');if(!m)return;m.innerHTML='';
+  slots.forEach(function(k){
+   var p=PRE[k],b=document.createElement('button');
+   b.className='big '+p.cls;
+   b.innerHTML='<span class="ic">'+p.icon+'</span><span class="lb">'+p.label+'</span><span class="sub">'+p.sub+'</span>';
+   b.setAttribute('aria-label',p.label+'を撮る');
+   b.addEventListener('click',function(){mode=k;var f=$('file');if(f){f.value='';f.click()}});
+   m.appendChild(b);
+  });
+ }catch(e){}
+}
+
+function norm(t){try{return (t||'').normalize('NFKC').replace(/[ \t　]+/g,' ')}catch(e){return t||''}}
+function uniq(a){return a.filter(function(v,i){return a.indexOf(v)===i})}
+
+function extract(k,data){
+ var text=norm(data&&data.text),out=[];
+ try{
+  if(k==='food'){
+   (text.match(/\d{3,4}\s?[WwＷ]/g)||[]).forEach(function(s){out.push('🔆 '+s.replace(/\s/g,'').toUpperCase())});
+   (text.match(/\d+\s?分(\s?\d+\s?秒)?|\d+\s?秒/g)||[]).forEach(function(s){out.push('⏱ '+s.replace(/\s/g,''))});
+   text.split('\n').forEach(function(l){
+    if(/賞味|消費|期限|(19|20)?\d{2}[.\/年-]\d{1,2}([.\/月-]\d{1,2}日?)?/.test(l)){var s=l.trim();if(s.length>1&&s.length<40)out.push('📅 '+s)}
+   });
+  }else if(k==='med'){
+   (text.match(/毎食後|毎食前|食前|食後|食間|朝|昼|夕|晩|夜|寝る前|就寝前|起床時|頓服|1日\s?\d\s?回/g)||[]).forEach(function(s){out.push(s.replace(/\s/g,''))});
+  }else if(k==='news'){
+   var ls=(data&&data.lines)||[];
+   ls=ls.map(function(l){var h=l.bbox?Math.min(l.bbox.y1-l.bbox.y0,l.bbox.x1-l.bbox.x0):0;return{t:norm(l.text).replace(/\s/g,''),h:h}})
+    .filter(function(l){return l.t.length>=2}).sort(function(a,b){return b.h-a.h}).slice(0,3);
+   ls.forEach(function(l){out.push(l.t)});
+   if(!out.length)out=text.split('\n').map(function(s){return s.trim()}).filter(function(s){return s.length>=2}).slice(0,3);
+  }else{
+   out=text.split('\n').map(function(s){return s.trim()}).filter(function(s){return s.length>=2}).slice(0,4);
+  }
+ }catch(e){}
+ return uniq(out).join('\n');
+}
+
+function speak(t){
+ try{
+  if(!('speechSynthesis' in window)||!t)return;
+  speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(t.replace(/[🔆⏱📅]/g,'').replace(/\n/g,'。'));
+  u.lang='ja-JP';u.rate=.9;speechSynthesis.speak(u);
+ }catch(e){}
+}
+
+function showResult(text,ok){
+ try{
+  var n=text.length,rt=$('rtext'),rm=$('rmode');
+  if(rm)rm.textContent=PRE[mode].icon+' '+PRE[mode].label;
+  if(rt){rt.textContent=text;rt.style.color=ok?'#F0E442':'#fff';
+   rt.style.fontSize=n<=6?'22vw':n<=14?'14vw':n<=30?'9vw':'6.5vw';}
+  lastText=text;show('res',true);
+  if(ok)speak(text);else speak(text);
+ }catch(e){}
+}
+
+function shrink(file){
+ return new Promise(function(res){
+  try{
+   var url=URL.createObjectURL(file),im=new Image();
+   im.onload=function(){try{
+    var s=Math.min(1,1800/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);res(c);
+   }catch(e){res(file)}};
+   im.onerror=function(){res(file)};
+   im.src=url;
+  }catch(e){res(file)}
+ });
+}
+
+async function runOcr(file){
+ show('ld',true);var pg=$('pg');if(pg)pg.textContent='';
+ try{
+  if(!window.Tesseract)throw new Error('no ocr');
+  var img=await shrink(file);
+  var r=await Tesseract.recognize(img,'jpn+eng',{logger:function(m){try{if(pg&&m.status==='recognizing text')pg.textContent=Math.round(m.progress*100)+'%'}catch(e){}}});
+  var d=r&&r.data,t=extract(mode,d);
+  show('ld',false);
+  if(t)showResult(t,true);
+  else showResult('読めませんでした。\nもう少し近づいて、明るい所で撮りなおしてください。',false);
+ }catch(e){
+  show('ld',false);
+  showResult('うまく読み取れませんでした。\nネットにつながっているか確認して、もう一度お試しください。',false);
+ }
+}
+
+var fi=$('file');
+if(fi)fi.addEventListener('change',function(){try{var f=fi.files&&fi.files[0];if(f)runOcr(f)}catch(e){}});
+var b;
+if((b=$('bAgain')))b.addEventListener('click',function(){speak(lastText)});
+if((b=$('bClose')))b.addEventListener('click',function(){try{speechSynthesis.cancel()}catch(e){}show('res',false)});
+if((b=$('bHelp')))b.addEventListener('click',function(){show('help',true)});
+if((b=$('hClose')))b.addEventListener('click',function(){show('help',false)});
+
+/* 設定 */
+function fillSelects(){
+ for(var i=0;i<3;i++){
+  var s=$('s'+i);if(!s)continue;s.innerHTML='';
+  Object.keys(PRE).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=PRE[k].icon+' '+PRE[k].label;s.appendChild(o)});
+  s.value=slots[i];
+ }
+}
+if((b=$('bSet')))b.addEventListener('click',function(){
+ fillSelects();
+ var lo=$('lockOn'),pc=$('pc'),m=$('msg');
+ if(lo)lo.checked=!!store.get('lockOn',false);
+ if(pc)pc.value=store.get('pass','')||'';
+ if(m)m.textContent='';
+ show('set',true);
+});
+if((b=$('sClose')))b.addEventListener('click',function(){show('set',false)});
+if((b=$('sSave')))b.addEventListener('click',function(){
+ try{
+  var m=$('msg'),lo=$('lockOn'),pc=$('pc'),ns=[];
+  for(var i=0;i<3;i++){var s=$('s'+i);ns.push(s?s.value:slots[i])}
+  var on=lo&&lo.checked,p=pc?pc.value.replace(/[^0-9]/g,''):'';
+  if(on&&p.length!==4){if(m)m.textContent='⚠ 4けたの数字を入れてください';return}
+  slots=ns;store.set('slots',slots);
+  store.set('lockOn',!!on);if(p.length===4)store.set('pass',p);
+  renderMain();
+  if(m)m.textContent='✅ 保存しました';
+  setTimeout(function(){show('set',false)},700);
+ }catch(e){}
+});
+
+/* ロック */
+var entered='';
+function drawDots(){var d=$('dots');if(d){var s='';for(var i=0;i<4;i++)s+=i<entered.length?'●':'○';d.textContent=s}}
+function buildPad(){
+ var pad=$('pad');if(!pad)return;pad.innerHTML='';
+ ['1','2','3','4','5','6','7','8','9','消','0','OK'].forEach(function(k){
+  var bt=document.createElement('button');bt.textContent=k;
+  bt.addEventListener('click',function(){
+   var lm=$('lmsg');if(lm)lm.textContent='';
+   if(k==='消')entered=entered.slice(0,-1);
+   else if(k==='OK'){}
+   else if(entered.length<4)entered+=k;
+   drawDots();
+   if(entered.length===4){
+    if(entered===String(store.get('pass',''))){entered='';drawDots();show('lock',false)}
+    else{entered='';drawDots();if(lm)lm.textContent='❌ 合言葉がちがいます'}
+   }
+  });
+  pad.appendChild(bt);
+ });
+}
+
+/* ホーム画面追加案内 */
+var dp=null;
+function showInst(txt){
+ try{
+  if(store.get('instDone',false))return;
+  var i=$('inst');if(!i)return;
+  if(txt&&$('instTx'))$('instTx').textContent=txt;
+  setTimeout(function(){i.classList.add('on')},1500);
+ }catch(e){}
+}
+window.addEventListener('beforeinstallprompt',function(e){try{e.preventDefault();dp=e;showInst()}catch(x){}});
+if((b=$('instNo')))b.addEventListener('click',function(){store.set('instDone',true);show('inst',false);var i=$('inst');if(i)i.classList.remove('on')});
+if((b=$('instYes')))b.addEventListener('click',function(){
+ try{
+  if(dp){dp.prompt();dp=null}
+  else alert('ブラウザのメニュー（共有ボタン）から「ホーム画面に追加」を選んでください。');
+  store.set('instDone',true);var i=$('inst');if(i)i.classList.remove('on');
+ }catch(e){}
+});
+try{
+ var ios=/iphone|ipad|ipod/i.test(navigator.userAgent),st=window.matchMedia&&matchMedia('(display-mode: standalone)').matches;
+ if(ios&&!st&&!navigator.standalone)showInst('📲 共有ボタン →「ホーム画面に追加」でアプリとして使えます');
+}catch(e){}
+
+renderMain();buildPad();drawDots();
+if(store.get('lockOn',false)&&String(store.get('pass','')).length===4)show('lock',true);
+
+try{
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){})}
+}catch(e){}
+});
+</script>
+
+<footer style="text-align: center; font-size: 0.75rem; color: #888; margin-top: 3rem; padding: 1rem 0.5rem; line-height: 1.5;">
+  <p style="margin-bottom: 0.5rem;">【ご利用について】</p>
+  <p style="margin-bottom: 0.5rem;">本アプリの利用に伴うトラブルやデータ損失等について、開発者は一切の責任を負いかねます。</p>
+  <p style="margin-bottom: 0.5rem;">ご意見・不具合のご報告は X（<a href="https://x.com/lblt_labo" target="_blank" rel="noopener" style="color: #666; text-decoration: underline;">@lblt_labo</a>）までお願いいたします。</p>
+  <p style="margin-top: 0.5rem;"><a href="https://ofuse.me/lbltlabo/letter" target="_blank" rel="noopener noreferrer" style="color: #666; text-decoration: underline;">☕️ 開発者を応援する / メッセージを送る</a></p>
+</footer>
+</body>
+</html>
